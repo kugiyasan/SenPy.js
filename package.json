@@ -1,0 +1,16 @@
+{
+  "name": "SenPy.js",
+  "version": "1.0.0",
+  "description": "A rewritten version of SenPy, my first discord bot in Python",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "kugiyasan",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0"
+  }
+}
