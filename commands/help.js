@@ -5,9 +5,8 @@ const { prefix } = process.env;
 module.exports = {
   name: "help",
   description: "List all of my commands or info about a specific command.",
-  aliases: ["commands"],
+  aliases: ["commands", "h"],
   usage: "[command name]",
-  cooldown: 5,
   execute(message, args) {
     const data = [];
     const { commands } = message.client;
@@ -15,7 +14,12 @@ module.exports = {
     if (!args.length) {
       // dm the full command list
       data.push("Here's a list of all my commands:");
-      data.push(commands.map((command) => command.name).join(", "));
+      data.push(
+        commands
+          .filter((command) => !command.hidden)
+          .map((command) => command.name)
+          .join(", ")
+      );
       data.push(
         `\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`
       );

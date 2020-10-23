@@ -7,55 +7,30 @@ const prefix = process.env.prefix;
 client.commands = new Discord.Collection();
 const cooldowns = new Discord.Collection();
 
-// load the commands
-const directories = ["./commands", "./commands/info"];
-const commandFiles = [];
-for (const directory of directories) {
-  const files = fs
-    .readdirSync(directory)
-    .filter((file) => file.endsWith(".js"));
-
-  for (file of files) {
-    const command = require(`${directory}/${file}`);
-    command.directory = directory;
-    client.commands.set(command.name, command);
-  }
-  commandFiles.push(...files);
-}
-
-client.once("ready", () => {
-  console.log(
-    `Logged in as ${client.user.tag} on ${client.guilds.cache.size} servers`
+const getCommandByName = (commandName) =>
+  client.commands.get(commandName) ||
+  client.commands.find(
+    (cmd) => cmd.aliases && cmd.aliases.includes(commandName)
   );
-  client.user.setActivity(`${prefix} help | ${prefix} about`);
-});
 
-client.on("message", async (message) => {
-  // TODO check if mentionned
-  if (!message.content.startsWith(prefix) || message.author.bot) return;
-
-  const [args, command] = parseMessage(message);
-
-  if (!canRun(args, message, command)) return;
-
-  try {
-    await command.execute(message, args);
-  } catch (error) {
-    await onCommandError(message, error, command);
-  }
-});
+// check if the message starts with the command prefix or a mention
+const isInvoked = (message) =>
+  (message.content.startsWith(prefix) ||
+    message.content.startsWith(`<@!${client.user.id}>`)) &&
+  !message.author.bot;
 
 const parseMessage = (message) => {
-  const args = message.content.slice(prefix.length).trim().split(/ +/);
+  // if not starting with the prefix, the bot has been tagged
+  const prefixLength = message.content.startsWith(prefix)
+    ? prefix.length
+    : 4 + client.user.id.length;
+
+  const args = message.content.slice(prefixLength).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
 
-  const command =
-    client.commands.get(commandName) ||
-    client.commands.find(
-      (cmd) => cmd.aliases && cmd.aliases.includes(commandName)
-    );
+  const command = getCommandByName(commandName);
 
-  return [args, command];
+  return [command, args];
 };
 
 const canRun = async (args, message, command) => {
@@ -76,11 +51,18 @@ const canRun = async (args, message, command) => {
     return false;
   }
 
-  if (await onCooldown(message, command)) return false;
+  if (
+    command.isOwner &&
+    message.author.id !== (await client.fetchApplication()).owner.id
+  )
+    return false;
+
+  // if (await onCooldown(message, command)) return false;
 
   return true;
 };
 
+/*
 const onCooldown = async (message, command) => {
   if (!cooldowns.has(command.name)) {
     cooldowns.set(command.name, new Discord.Collection());
@@ -107,6 +89,7 @@ const onCooldown = async (message, command) => {
   timestamps.set(message.author.id, now);
   setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 };
+*/
 
 const onCommandError = async (message, error, command) => {
   console.error(error);
@@ -125,4 +108,50 @@ const onCommandError = async (message, error, command) => {
   await owner.send(reply);
 };
 
+const loadCommands = (directory = "./commands") =>
+  fs.readdirSync(directory, { withFileTypes: true }).forEach((element) => {
+    if (element.isDirectory())
+      return loadCommands(`${directory}/${element.name}`);
+
+    const file = element.name;
+    if (!file.endsWith(".js")) return;
+
+    const command = require(`${directory}/${file}`);
+    // category is the name of the folder in which the command is
+    command.category = directory.match(/(?<=\/)[^\/]+$/)[0];
+    command.directory = directory;
+
+    // check if there is already a command with the same name or alias
+    if (
+      getCommandByName(command.name) ||
+      (command.aliases &&
+        command.aliases.some((name) => getCommandByName(name)))
+    )
+      throw `${command.name} or one of its aliases is already registered!`;
+
+    client.commands.set(command.name, command);
+  });
+
+client.once("ready", () => {
+  console.log(
+    `Logged in as ${client.user.tag} on ${client.guilds.cache.size} servers`
+  );
+  client.user.setActivity(`${prefix} help | ${prefix} about`);
+});
+
+client.on("message", async (message) => {
+  if (!isInvoked(message)) return;
+
+  const [command, args] = parseMessage(message);
+
+  if (!canRun(args, message, command)) return;
+
+  try {
+    await command.execute(message, args);
+  } catch (error) {
+    await onCommandError(message, error, command);
+  }
+});
+
+loadCommands();
 client.login(process.env.DISCORD_TOKEN);

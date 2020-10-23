@@ -5,8 +5,10 @@ module.exports = {
   args: true,
   usage: "blah blah blah",
   async execute(message, args) {
-    const { owner } = message.client.fetchApplication();
-    await owner.send(`***${message.author}*** has some feedback!\n${args.join(" ")}`)
+    const { owner } = await message.client.fetchApplication();
+    await owner.send(
+      `***${message.author}*** has some feedback!\n${args.join(" ")}`
+    );
     await message.channel.send("Your feedback was sent successfully!");
   },
 };
