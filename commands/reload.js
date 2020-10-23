@@ -2,6 +2,8 @@ module.exports = {
   name: "reload",
   description: "Reloads a command",
   aliases: ["rl"],
+  hidden: true,
+  isOwner: true,
   async execute(message, args) {
     if (!args.length)
       return message.channel.send(
@@ -19,10 +21,13 @@ module.exports = {
         `There is no command with name or alias \`${commandName}\`, ${message.author}!`
       );
 
-    delete require.cache[require.resolve(`./${command.name}.js`)];
+    delete require.cache[
+      require.resolve(`../${command.directory}/${command.name}.js`)
+    ];
 
     try {
-      const newCommand = require(`./${command.name}.js`);
+      const newCommand = require(`../${command.directory}/${command.name}.js`);
+      newCommand.directory = command.directory;
       message.client.commands.set(newCommand.name, newCommand);
     } catch (error) {
       console.log(error);
@@ -31,6 +36,6 @@ module.exports = {
       );
     }
 
-    await message.react("✅")
+    await message.react("✅");
   },
 };
