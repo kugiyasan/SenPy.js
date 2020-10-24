@@ -10,7 +10,12 @@
   "author": "kugiyasan",
   "license": "MIT",
   "dependencies": {
+    "booru": "^2.3.3",
     "discord.js": "^12.2.0",
     "dotenv": "^8.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/kugiyasan/SenPy.js.git"
   }
 }

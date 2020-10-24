@@ -18,11 +18,11 @@ module.exports = {
       );
 
     delete require.cache[
-      require.resolve(`../${command.directory}/${command.name}.js`)
+      require.resolve(`../../${command.directory}/${command.name}`)
     ];
 
     try {
-      const newCommand = require(`../${command.directory}/${command.name}.js`);
+      const newCommand = require(`../../${command.directory}/${command.name}`);
 
       newCommand.category = command.category;
       newCommand.directory = command.directory;
