@@ -1,5 +1,4 @@
 module.exports = {
-  name: "delete",
   description: "delete the last messages of the bot",
   aliases: ["purge", "del"],
   usage: "<number of messages to delete>",

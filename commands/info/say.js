@@ -1,5 +1,4 @@
 module.exports = {
-  name: "say",
   description: "Make this little innocent bot speak for you, you pervert",
   guildOnly: false,
   usage: "<text>",

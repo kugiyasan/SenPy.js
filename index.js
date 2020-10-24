@@ -96,8 +96,7 @@ const onCommandError = async (message, error, command) => {
   let reply = "There was an unexpected error, I'll inform the bot dev, sorry~~";
   await message.channel.send(reply);
 
-  let guild = "";
-  if (message.guild) guild = `from ${message.guild.name} `;
+  const guild = message.guild ? `from ${message.guild.name} ` : "";
 
   const { owner } = await client.fetchApplication();
   reply =
@@ -118,8 +117,10 @@ const loadCommands = (directory = "./commands") =>
 
     const command = require(`${directory}/${file}`);
     // category is the name of the folder in which the command is
+    // TODO should make sure that the category isn't a command name or alias
     command.category = directory.match(/(?<=\/)[^\/]+$/)[0];
     command.directory = directory;
+    command.name = file.slice(0, -3);
 
     // check if there is already a command with the same name or alias
     if (
@@ -144,7 +145,7 @@ client.on("message", async (message) => {
 
   const [command, args] = parseMessage(message);
 
-  if (!canRun(args, message, command)) return;
+  if (!await canRun(args, message, command)) return;
 
   try {
     await command.execute(message, args);

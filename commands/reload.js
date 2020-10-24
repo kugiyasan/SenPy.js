@@ -1,14 +1,10 @@
 module.exports = {
-  name: "reload",
   description: "Reloads a command",
   aliases: ["rl"],
+  args: true,
   hidden: true,
   isOwner: true,
   async execute(message, args) {
-    if (!args.length)
-      return message.channel.send(
-        `You didn't pass any command to reload, ${message.author}!`
-      );
     const commandName = args[0].toLowerCase();
     const command =
       message.client.commands.get(commandName) ||
@@ -27,7 +23,11 @@ module.exports = {
 
     try {
       const newCommand = require(`../${command.directory}/${command.name}.js`);
+
+      newCommand.category = command.category;
       newCommand.directory = command.directory;
+      newCommand.name = command.name;
+
       message.client.commands.set(newCommand.name, newCommand);
     } catch (error) {
       console.log(error);

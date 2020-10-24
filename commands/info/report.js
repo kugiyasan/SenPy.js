@@ -1,5 +1,4 @@
 module.exports = {
-  name: "report",
   description: "Send your thoughts about this bot to the bot dev",
   aliases: ["suggest", "comment", "feedback"],
   args: true,
